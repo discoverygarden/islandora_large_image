@@ -1,4 +1,4 @@
-# Large Image Solution Pack [![Build Status](https://travis-ci.org/Islandora/islandora_solution_pack_large_image.png?branch=7.x)](https://travis-ci.org/Islandora/islandora_solution_pack_large_image)
+# Large Image Solution Pack
 
 ## Introduction
 
@@ -8,7 +8,7 @@ The Large Image Solution Pack loads all required Fedora objects and creates an e
 
 This module requires the following modules/libraries:
 
-* [Islandora](https://github.com/islandora/islandora)
+* [Islandora](https://github.com/discoverygarden/islandora)
 * [Tuque](https://github.com/islandora/tuque)
 * [ImageMagick](https://drupal.org/project/imagemagick)
 * Kakadu (bundled with Djatoka)
@@ -17,7 +17,8 @@ This module requires the following modules/libraries:
 
 ## Installation
 
-Install as usual, see [this](https://drupal.org/documentation/install/modules-themes/modules-7) for further information.
+Install as
+[usual](https://www.drupal.org/docs/8/extending-drupal-8/installing-drupal-8-modules).
 
 ## Configuration
 
@@ -38,19 +39,27 @@ Further documentation for this module is available at [our wiki](https://wiki.du
 
 ## Troubleshooting/Issues
 
-Having problems or solved a problem? Check out the Islandora google groups for a solution.
+Having problems or solved one? Create an issue, check out the Islandora Google
+groups.
 
-* [Islandora Group](https://groups.google.com/forum/?hl=en&fromgroups#!forum/islandora)
-* [Islandora Dev Group](https://groups.google.com/forum/?hl=en&fromgroups#!forum/islandora-dev)
+* [Users](https://groups.google.com/forum/?hl=en&fromgroups#!forum/islandora)
+* [Devs](https://groups.google.com/forum/?hl=en&fromgroups#!forum/islandora-dev)
+
+or contact [discoverygarden](http://support.discoverygarden.ca).
 
 ## Maintainers/Sponsors
+
 Current maintainers:
 
-* [Alan Stanley](https://github.com/ajstanley)
+* [discoverygarden](http://www.discoverygarden.ca)
 
 ## Development
 
-If you would like to contribute to this module, please check out [CONTRIBUTING.md](CONTRIBUTING.md). In addition, we have helpful [Documentation for Developers](https://github.com/Islandora/islandora/wiki#wiki-documentation-for-developers) info, as well as our [Developers](http://islandora.ca/developers) section on the [Islandora.ca](http://islandora.ca) site.
+If you would like to contribute to this module, please check out the helpful
+[Documentation](https://github.com/Islandora/islandora/wiki#wiki-documentation-for-developers),
+[Developers](http://islandora.ca/developers) section on Islandora.ca and create
+an issue, pull request and or contact
+[discoverygarden](http://support.discoverygarden.ca).
 
 ## License
 
