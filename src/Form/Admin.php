@@ -1,17 +1,12 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\islandora_large_image\Form\IslandoraLargeImageAdmin.
- */
-
 namespace Drupal\islandora_large_image\Form;
 
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Element;
 
-class IslandoraLargeImageAdmin extends ConfigFormBase {
+class Admin extends ConfigFormBase {
 
   /**
    * {@inheritdoc}
@@ -142,4 +137,3 @@ class IslandoraLargeImageAdmin extends ConfigFormBase {
   }
 
 }
-?>
