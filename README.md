@@ -22,12 +22,12 @@ Install as
 
 ## Configuration
 
-Configure the image-toolkit to use ImageMagick rather than GD in Administration > Configuration > Media > Image Toolkit (admin/config/media/image-toolkit). If GD is selected, TN and JPG datastreams will not be generated.
+Configure the image-toolkit to use ImageMagick rather than GD in Configuration > Media > Image Toolkit (admin/config/media/image-toolkit). If GD is selected, TN and JPG datastreams will not be generated.
 
 ![Configuration](https://camo.githubusercontent.com/6ae64673716ddf1f58d0e4856d7d7a5d79845506/687474703a2f2f692e696d6775722e636f6d2f4f33735150654f2e706e67)
 
 
-Select configuration options and viewer in Administration > Islandora > Large Image Collection (admin/islandora/large_image).
+Select configuration options and viewer in Configuration > Islandora > Large Image Collection (admin/config/islandora/large_image).
 
 To use Kakadu, make sure that `kdu_compress` is available to the Apache user. Often users will create symbolic links from `/usr/local/bin/kdu_compress` to their installation of Kakadu that comes bundled with [Adore-Djatoka](http://sourceforge.net/apps/mediawiki/djatoka/index.php?title=Installation). Make sure that the required dynamic libraries that come with Kakadu are accessible to `kdu_compress` and `kdu_expand`. If they are not present, attempting to run either command from the terminal will inform you that the libraries are missing. You can also use a symbolic link from `/usr/local/lib` to include these libraries. Remember to restart the terminal so your changes take affect. Also, make sure the php settings allow for enough memory and upload size: `upload_max_filesize`, `post_max_size` and `memory_limit`.
 
