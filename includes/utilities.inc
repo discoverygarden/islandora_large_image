@@ -16,7 +16,12 @@ function islandora_large_image_check_imagemagick_for_jpeg2000() {
   if ($supports === NULL) {
     $command_output = NULL;
 
-    $e = exec(escapeshellcmd(variable_get('imagemagick_convert', 'convert')) . " -list format", $command_output);
+    // @FIXME
+// // @FIXME
+// // This looks like another module's variable. You'll need to rewrite this call
+// // to ensure that it uses the correct configuration object.
+// $e = exec(escapeshellcmd(variable_get('imagemagick_convert', 'convert')) . " -list format", $command_output);
+
     $filtered = preg_filter("/.*JP2.*JPEG-2000\s+File\s+Format\s+Syntax/", "\\0", $command_output);
     $supports = FALSE;
     foreach ($filtered as $f) {
@@ -45,7 +50,7 @@ function islandora_large_image_check_imagemagick_for_jpeg2000() {
 function islandora_large_image_get_bit_depth($file_uri) {
   module_load_include('inc', 'islandora_large_image', 'includes/derivatives');
   if (file_exists($file_uri)) {
-    $file_path = escapeshellarg(drupal_realpath($file_uri));
+    $file_path = escapeshellarg(\Drupal::service("file_system")->realpath($file_uri));
     $identify = islandora_large_image_get_identify();
     return exec(escapeshellcmd("$identify -format %[depth] ") . $file_path);
   }

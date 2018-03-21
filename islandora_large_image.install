@@ -12,7 +12,7 @@ function islandora_large_image_requirements($phase) {
   module_load_include('inc', 'islandora', 'includes/utilities');
   $requirements = array();
   if ($phase == 'install') {
-    $t = get_t();
+    $t = 't';
     $out = array();
     $ret = 1;
 

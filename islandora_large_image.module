@@ -53,16 +53,37 @@ function islandora_large_image_theme($existing, $type, $theme, $path) {
 function islandora_large_image_islandora_view_print_object($object) {
   $output = array();
   if (in_array('islandora:sp_large_image_cmodel', $object->models)) {
-    $resource_url = url("islandora/object/{$object->id}/datastream/JPG/view");
+    // @FIXME
+// url() expects a route name or an external URI.
+// $resource_url = url("islandora/object/{$object->id}/datastream/JPG/view");
+
     $params = array(
       'title' => $object->label,
       'path' => $resource_url,
     );
 
     // Theme the image seperatly.
-    $variables['islandora_img'] = theme('image', $params);
-    $output = theme('islandora_large_image_print', array(
+    // @FIXME
+// theme() has been renamed to _theme() and should NEVER be called directly.
+// Calling _theme() directly can alter the expected output and potentially
+// introduce security issues (see https://www.drupal.org/node/2195739). You
+// should use renderable arrays instead.
+// 
+// 
+// @see https://www.drupal.org/node/2195739
+// $variables['islandora_img'] = theme('image', $params);
+
+    // @FIXME
+// theme() has been renamed to _theme() and should NEVER be called directly.
+// Calling _theme() directly can alter the expected output and potentially
+// introduce security issues (see https://www.drupal.org/node/2195739). You
+// should use renderable arrays instead.
+// 
+// 
+// @see https://www.drupal.org/node/2195739
+// $output = theme('islandora_large_image_print', array(
       'islandora_content' => $variables['islandora_img']));
+
   }
 
   return $output;
@@ -144,7 +165,16 @@ function islandora_large_image_xml_form_builder_form_associations() {
  * Implements hook_CMODEL_PID_islandora_view_object().
  */
 function islandora_large_image_islandora_sp_large_image_cmodel_islandora_view_object($object, $page_number, $page_size) {
-  $output = theme('islandora_large_image', array('islandora_object' => $object));
+  // @FIXME
+// theme() has been renamed to _theme() and should NEVER be called directly.
+// Calling _theme() directly can alter the expected output and potentially
+// introduce security issues (see https://www.drupal.org/node/2195739). You
+// should use renderable arrays instead.
+// 
+// 
+// @see https://www.drupal.org/node/2195739
+// $output = theme('islandora_large_image', array('islandora_object' => $object));
+
   return array('' => $output);
 }
 
@@ -152,8 +182,24 @@ function islandora_large_image_islandora_sp_large_image_cmodel_islandora_view_ob
  * Implements template_preprocess_HOOK().
  */
 function template_preprocess_islandora_large_image(&$variables) {
-  drupal_add_js('misc/form.js');
-  drupal_add_js('misc/collapse.js');
+  // @FIXME
+// The Assets API has totally changed. CSS, JavaScript, and libraries are now
+// attached directly to render arrays using the #attached property.
+// 
+// 
+// @see https://www.drupal.org/node/2169605
+// @see https://www.drupal.org/node/2408597
+// drupal_add_js('misc/form.js');
+
+  // @FIXME
+// The Assets API has totally changed. CSS, JavaScript, and libraries are now
+// attached directly to render arrays using the #attached property.
+// 
+// 
+// @see https://www.drupal.org/node/2169605
+// @see https://www.drupal.org/node/2408597
+// drupal_add_js('misc/collapse.js');
+
   $islandora_object = $variables['islandora_object'];
   $repository = $islandora_object->repository;
   module_load_include('inc', 'islandora', 'includes/datastream');
@@ -172,7 +218,7 @@ function template_preprocess_islandora_large_image(&$variables) {
         '@ret' => $e->getMessage(),
         '@trace' => $e->getTraceAsString(),
       );
-      watchdog('islandora_large_image', 'Error retrieving object.<br/>Error: @ret<br/>Trace: @trace', $variables, WATCHDOG_ERROR);
+      \Drupal::logger('islandora_large_image')->error('Error retrieving object.<br/>Error: @ret<br/>Trace: @trace', []);
       drupal_set_message(t('Error retrieving object %s %t', array('%s' => $islandora_object->id, '%t' => $e->getMessage())), 'error', FALSE);
     }
   }
@@ -186,11 +232,23 @@ function template_preprocess_islandora_large_image(&$variables) {
 
   // Thumbnail.
   if (isset($islandora_object['TN']) && islandora_datastream_access(ISLANDORA_VIEW_OBJECTS, $islandora_object['TN'])) {
-    $params = array(
-      'title' => $islandora_object->label,
-      'path' => url("islandora/object/{$islandora_object->id}/datastream/TN/view"),
-    );
-    $variables['islandora_thumbnail_img'] = theme('image', $params);
+    // @FIXME
+// url() expects a route name or an external URI.
+// $params = array(
+//       'title' => $islandora_object->label,
+//       'path' => url("islandora/object/{$islandora_object->id}/datastream/TN/view"),
+//     );
+
+    // @FIXME
+// theme() has been renamed to _theme() and should NEVER be called directly.
+// Calling _theme() directly can alter the expected output and potentially
+// introduce security issues (see https://www.drupal.org/node/2195739). You
+// should use renderable arrays instead.
+// 
+// 
+// @see https://www.drupal.org/node/2195739
+// $variables['islandora_thumbnail_img'] = theme('image', $params);
+
   }
   module_load_include('inc', 'islandora', 'includes/solution_packs');
 
@@ -201,12 +259,15 @@ function template_preprocess_islandora_large_image(&$variables) {
     // Always use token authentication in case there is a global policy.
     module_load_include('inc', 'islandora', 'includes/authtokens');
     $token = islandora_get_object_token($islandora_object->id, 'JP2', 2);
-    $jp2_url = url("islandora/object/{$islandora_object->id}/datastream/JP2/view",
-      array(
-        'absolute' => TRUE,
-        'query' => array('token' => $token),
-      )
-    );
+    // @FIXME
+// url() expects a route name or an external URI.
+// $jp2_url = url("islandora/object/{$islandora_object->id}/datastream/JP2/view",
+//       array(
+//         'absolute' => TRUE,
+//         'query' => array('token' => $token),
+//       )
+//     );
+
     $params['token'] = $token;
     $params['pid'] = $islandora_object->id;
     $params['dsid'] = 'JP2';
@@ -219,21 +280,42 @@ function template_preprocess_islandora_large_image(&$variables) {
   if ($viewer) {
     if (strpos($viewer, 'islandora-openseadragon') !== FALSE) {
       if (isset($islandora_object['JP2']) && islandora_datastream_access(ISLANDORA_VIEW_OBJECTS, $islandora_object['JP2'])) {
-        $variables['image_clip'] = theme(
-          'islandora_openseadragon_clipper',
-          array('pid' => $islandora_object->id)
-        );
+        // @FIXME
+// theme() has been renamed to _theme() and should NEVER be called directly.
+// Calling _theme() directly can alter the expected output and potentially
+// introduce security issues (see https://www.drupal.org/node/2195739). You
+// should use renderable arrays instead.
+// 
+// 
+// @see https://www.drupal.org/node/2195739
+// $variables['image_clip'] = theme(
+//           'islandora_openseadragon_clipper',
+//           array('pid' => $islandora_object->id)
+//         );
+
       }
     }
     $variables['islandora_content'] = $viewer;
   }
   // If no viewer is configured just show the jpeg.
   elseif (isset($islandora_object['JPG']) && islandora_datastream_access(ISLANDORA_VIEW_OBJECTS, $islandora_object['JPG'])) {
-    $params = array(
-      'title' => $islandora_object->label,
-      'path' => url("islandora/object/{$islandora_object->id}/datastream/JPG/view"),
-    );
-    $variables['islandora_content'] = theme('image', $params);
+    // @FIXME
+// url() expects a route name or an external URI.
+// $params = array(
+//       'title' => $islandora_object->label,
+//       'path' => url("islandora/object/{$islandora_object->id}/datastream/JPG/view"),
+//     );
+
+    // @FIXME
+// theme() has been renamed to _theme() and should NEVER be called directly.
+// Calling _theme() directly can alter the expected output and potentially
+// introduce security issues (see https://www.drupal.org/node/2195739). You
+// should use renderable arrays instead.
+// 
+// 
+// @see https://www.drupal.org/node/2195739
+// $variables['islandora_content'] = theme('image', $params);
+
   }
   else {
     $variables['islandora_content'] = NULL;
@@ -261,11 +343,17 @@ function islandora_large_image_islandora_sp_large_image_cmodel_islandora_ingest_
 function islandora_large_image_preprocess_islandora_object_print(array &$variables) {
   $object = $variables['object'];
   if (in_array('islandora:sp_large_image_cmodel', $object->models)) {
-    $url = url("islandora/object/{$object->id}", array('absolute' => TRUE));
-    $variables['content']['link'] = array(
-      '#weight' => -10,
-      '#markup' => t('Persistent link: !link', array("!link" => l($url, $url))),
-    );
+    // @FIXME
+// url() expects a route name or an external URI.
+// $url = url("islandora/object/{$object->id}", array('absolute' => TRUE));
+
+    // @FIXME
+// l() expects a Url object, created from a route name or external URI.
+// $variables['content']['link'] = array(
+//       '#weight' => -10,
+//       '#markup' => t('Persistent link: !link', array("!link" => l($url, $url))),
+//     );
+
   }
 }
 
@@ -276,29 +364,32 @@ function islandora_large_image_process_islandora_object_print(array &$variables)
   $object = $variables['object'];
   if (in_array('islandora:sp_large_image_cmodel', $object->models)) {
     $clip = isset($variables['clip']) ? $variables['clip'] : NULL;
-    $variables['content']['buttons'] = array(
-      '#access' => isset($clip),
-      '#prefix' => '<div>',
-      '#suffix' => '</div></br>',
-      '#weight' => -5,
-      'print' => array(
-        '#prefix' => '<strong>',
-        '#markup' => l(t('Print'), 'javascript:window.print();', array('external' => TRUE)),
-        '#suffix' => '</strong>',
-        '#weight' => -5,
-      ),
-      '0' => array(
-        '#markup' => ' | ',
-        '#weight' => -5,
-      ),
-      'download_clip' => array(
-        '#prefix' => '<strong>',
-        '#markup' => l(t('Download Image'), "islandora/object/{$object->id}/download_clip", array(
-                     'query' => array('clip' => $clip))),
-        '#suffix' => '</strong>',
-        '#weight' => -5,
-      ),
-    );
+    // @FIXME
+// l() expects a Url object, created from a route name or external URI.
+// $variables['content']['buttons'] = array(
+//       '#access' => isset($clip),
+//       '#prefix' => '<div>',
+//       '#suffix' => '</div></br>',
+//       '#weight' => -5,
+//       'print' => array(
+//         '#prefix' => '<strong>',
+//         '#markup' => \Drupal::l(t('Print'), \Drupal\Core\Url::fromUri('javascript:window.print();')),
+//         '#suffix' => '</strong>',
+//         '#weight' => -5,
+//       ),
+//       '0' => array(
+//         '#markup' => ' | ',
+//         '#weight' => -5,
+//       ),
+//       'download_clip' => array(
+//         '#prefix' => '<strong>',
+//         '#markup' => l(t('Download Image'), "islandora/object/{$object->id}/download_clip", array(
+//                      'query' => array('clip' => $clip))),
+//         '#suffix' => '</strong>',
+//         '#weight' => -5,
+//       ),
+//     );
+
   }
 }
 

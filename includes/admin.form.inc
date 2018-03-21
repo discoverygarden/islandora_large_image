@@ -20,7 +20,12 @@ function islandora_large_image_admin(array $form, array &$form_state) {
   module_load_include('inc', 'islandora', 'includes/utilities');
   module_load_include('inc', 'islandora_large_image', 'includes/utilities');
   $get_default_value = function($name, $default) use(&$form_state) {
-    return isset($form_state['values'][$name]) ? $form_state['values'][$name] : variable_get($name, $default);
+    // @FIXME
+// // @FIXME
+// // The correct configuration object could not be determined. You'll need to
+// // rewrite this call manually.
+// return isset($form_state['values'][$name]) ? $form_state['values'][$name] : variable_get($name, $default);
+
   };
   $imagemagick_supports_jp2000 = islandora_large_image_check_imagemagick_for_jpeg2000();
   $kakadu = $get_default_value('islandora_kakadu_url', '/usr/bin/kdu_compress');
@@ -38,7 +43,7 @@ function islandora_large_image_admin(array $form, array &$form_state) {
       '#disabled' => !$imagemagick_supports_jp2000,
       '#default_value' => $get_default_value('islandora_use_kakadu', !$imagemagick_supports_jp2000) || !$imagemagick_supports_jp2000,
       '#description' => t("!kakadu offers faster derivative creation than the standard ImageMagick package. %magick_info", array(
-                        '!kakadu' => l(t('Kakadu'), 'http://www.kakadusoftware.com/'),
+                        '!kakadu' => \Drupal::l(t('Kakadu'), \Drupal\Core\Url::fromUri('http://www.kakadusoftware.com/')),
                         '%magick_info' => $imagemagick_supports_jp2000 ?
                         t('ImageMagick reports support for JPEG 2000.') :
                         t('ImageMagick does not report support for JPEG 2000.'),
@@ -97,7 +102,7 @@ function islandora_large_image_admin_submit($form, &$form_state) {
   $op = $form_state['clicked_button']['#id'];
   switch ($op) {
     case 'edit-reset':
-      variable_del('islandora_large_image_viewers');
+      \Drupal::config('islandora_large_image.settings')->clear('islandora_large_image_viewers')->save();
       break;
   }
 }

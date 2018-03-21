@@ -44,7 +44,12 @@ function islandora_large_image_create_jp2_derivative(AbstractObject $object, $fo
       'messages' => array(),
     );
     $uploaded_file = islandora_large_image_get_uploaded_file($object);
-    $lossless = variable_get('islandora_lossless', FALSE);
+    // @FIXME
+// // @FIXME
+// // This looks like another module's variable. You'll need to rewrite this call
+// // to ensure that it uses the correct configuration object.
+// $lossless = variable_get('islandora_lossless', FALSE);
+
     if (islandora_large_image_is_jp2($uploaded_file) && !$lossless) {
       $derivative_file = $uploaded_file;
     }
@@ -53,7 +58,12 @@ function islandora_large_image_create_jp2_derivative(AbstractObject $object, $fo
       $depth = islandora_large_image_get_bit_depth($uploaded_file);
 
       // Create JP2 with kakadu.
-      $kakadu = variable_get('islandora_use_kakadu', !islandora_large_image_check_imagemagick_for_jpeg2000());
+      // @FIXME
+// // @FIXME
+// // This looks like another module's variable. You'll need to rewrite this call
+// // to ensure that it uses the correct configuration object.
+// $kakadu = variable_get('islandora_use_kakadu', !islandora_large_image_check_imagemagick_for_jpeg2000());
+
       $mime = strtolower($object['OBJ']->mimetype);
       if ($mime == 'image/jpeg' || $mime == 'image/jpg' || $depth < 8) {
         $kakadu = FALSE;
@@ -62,7 +72,7 @@ function islandora_large_image_create_jp2_derivative(AbstractObject $object, $fo
       if (!$lossless) {
         $identify = islandora_large_image_get_identify();
         // Define all these variables in one call for a large performance gain.
-        $file_path = drupal_realpath($uploaded_file);
+        $file_path = \Drupal::service("file_system")->realpath($uploaded_file);
         list($height, $width, $y_resolution, $x_resolution) = explode(
           ',',
           exec(escapeshellcmd("$identify -format \"%h,%W,%y,%x\" $file_path"))
@@ -160,7 +170,12 @@ function islandora_large_image_create_jpg_derivative(AbstractObject $object, $fo
     $uploaded_file = islandora_large_image_get_uploaded_file($object);
     $args = array();
     $args[] = '-resize ' . escapeshellarg("600 x 800");
-    $args[] = '-quality ' . escapeshellarg(variable_get('imagemagick_quality', 75));
+    // @FIXME
+// // @FIXME
+// // This looks like another module's variable. You'll need to rewrite this call
+// // to ensure that it uses the correct configuration object.
+// $args[] = '-quality ' . escapeshellarg(variable_get('imagemagick_quality', 75));
+
     $derivative_file = islandora_large_image_imagemagick_convert($uploaded_file, "temporary://{$base_name}_JPG.jpg", $args);
     if ($derivative_file === FALSE) {
       $to_return['messages'][] = array(
@@ -226,7 +241,12 @@ function islandora_large_image_create_tn_derivative(AbstractObject $object, $for
     else {
       // Only apply colorspace changes if not in the RGB family.
       $args = array();
-      $args[] = '-quality ' . escapeshellarg(variable_get('imagemagick_quality', 75));
+      // @FIXME
+// // @FIXME
+// // This looks like another module's variable. You'll need to rewrite this call
+// // to ensure that it uses the correct configuration object.
+// $args[] = '-quality ' . escapeshellarg(variable_get('imagemagick_quality', 75));
+
       $args[] = '-resize ' . escapeshellarg("200 x 200");
       $isrgb = stripos($colorspace, 'rgb');
       if ($isrgb === FALSE) {
@@ -299,21 +319,26 @@ function islandora_large_image_kdu_compress($src, $dest, $args = NULL) {
     // If the source is not a TIFF, or we have been instructed to uncompress
     // TIFFs, make it so.
     if (!islandora_large_image_is_tiff($src) ||
-      variable_get('islandora_large_image_uncompress_tiff', TRUE)) {
+      \Drupal::config('islandora_large_image.settings')->get('islandora_large_image_uncompress_tiff')) {
       $c_args[] = "-compress None";
     }
-    $c_dest = file_create_filename(drupal_basename($src) . ".tif", 'temporary://');
+    $c_dest = file_create_filename(\Drupal::service("file_system")->basename($src) . ".tif", 'temporary://');
     $src = islandora_large_image_imagemagick_convert($src, $c_dest, $c_args);
     $unlink_source = TRUE;
   }
   // Default args.
   $args = isset($args) ? $args : '-rate 0.5 Clayers=1 Clevels=7 "Cprecincts={256,256},{256,256},{256,256},{128,128},{128,128},{64,64},{64,64},{32,32},{16,16}" "Corder=RPCL" "ORGgen_plt=yes" "ORGtparts=R" "Cblk={32,32}" Cuse_sop=yes';
-  $src = drupal_realpath($src);
-  $dest = drupal_realpath($dest);
+  $src = \Drupal::service("file_system")->realpath($src);
+  $dest = \Drupal::service("file_system")->realpath($dest);
   $ret = -1;
   $ret_palette = 0;
   $output = array();
-  $kdu_compress = variable_get('islandora_kakadu_url', 'kdu_compress');
+  // @FIXME
+// // @FIXME
+// // This looks like another module's variable. You'll need to rewrite this call
+// // to ensure that it uses the correct configuration object.
+// $kdu_compress = variable_get('islandora_kakadu_url', 'kdu_compress');
+
   $command = "$kdu_compress -i \"$src\" -o \"$dest\" $args 2>&1";
   exec($command, $output, $ret);
 
@@ -353,16 +378,16 @@ function islandora_large_image_kdu_compress($src, $dest, $args = NULL) {
  *   The destination file path if successful otherwise FALSE.
  */
 function islandora_large_image_imagemagick_convert($src, $dest, $args) {
-  $src = drupal_realpath($src);
+  $src = \Drupal::service("file_system")->realpath($src);
   if (islandora_large_image_is_tiff($src)) {
     $src = $src . '[0]';
   }
-  $dest = drupal_realpath($dest);
+  $dest = \Drupal::service("file_system")->realpath($dest);
   $context = array(
     'source' => $src,
     'destination' => $dest,
   );
-  drupal_alter('imagemagick_arguments', $args, $context);
+  \Drupal::moduleHandler()->alter('imagemagick_arguments', $args, $context);
 
   // To make use of ImageMagick 6's parenthetical command grouping we need to
   // make the $source image the first parameter and $dest the last.
@@ -376,7 +401,7 @@ function islandora_large_image_imagemagick_convert($src, $dest, $args) {
       '@command' => $command,
       '!output' => implode('<br/>', $output),
     );
-    watchdog('islandora_large_image', 'ImageMagick failed to convert.<br/>Error: @ret<br/>Command: @command <br/>Output !output', $variables, WATCHDOG_ERROR);
+    \Drupal::logger('islandora_large_image')->error('ImageMagick failed to convert.<br/>Error: @ret<br/>Command: @command <br/>Output !output', []);
     return FALSE;
   }
   return $dest;
@@ -423,10 +448,7 @@ function islandora_large_image_add_datastream(AbstractObject $object, $dsid, $fi
     );
     // Adding watchdog here, islandora_large_image_add_datastream() calls will
     // add a dsm statement, but not a watchdog entry.
-    watchdog('islandora_large_image',
-      'Large Image failed to ingest data stream.<br/>Stack: @ret',
-      $variables,
-      WATCHDOG_ERROR);
+    \Drupal::logger('islandora_large_image')->error('Large Image failed to ingest data stream.<br/>Stack: @ret', []);
     $message = $e->getMessage();
     return $message;
   }
@@ -481,7 +503,7 @@ function islandora_large_image_get_args($lossless) {
 function islandora_large_image_is_uncompressed_tiff($file) {
   $identify = islandora_large_image_get_identify();
 
-  $escaped_file = escapeshellarg(drupal_realpath($file));
+  $escaped_file = escapeshellarg(\Drupal::service("file_system")->realpath($file));
 
   $compression = exec(escapeshellcmd("$identify -format \"%C\" ") . $escaped_file);
 
@@ -502,7 +524,7 @@ function islandora_large_image_is_uncompressed_tiff($file) {
 function islandora_large_image_is_tiff($file) {
   $identify = islandora_large_image_get_identify();
 
-  $escaped_file = escapeshellarg(drupal_realpath($file));
+  $escaped_file = escapeshellarg(\Drupal::service("file_system")->realpath($file));
 
   $codec = exec(escapeshellcmd("$identify -format \"%m\" ") . $escaped_file);
 
@@ -528,7 +550,7 @@ function islandora_large_image_is_tiff($file) {
 function islandora_large_image_is_jp2($file) {
   $identify = islandora_large_image_get_identify();
 
-  $escaped_file = escapeshellarg(drupal_realpath($file));
+  $escaped_file = escapeshellarg(\Drupal::service("file_system")->realpath($file));
 
   $codec = exec(escapeshellcmd("$identify -format \"%m\" ") . $escaped_file);
 
@@ -550,7 +572,7 @@ function islandora_large_image_is_jp2($file) {
 function islandora_large_image_get_colorspace($file) {
   $identify = islandora_large_image_get_identify();
 
-  $escaped_file = escapeshellarg(drupal_realpath($file));
+  $escaped_file = escapeshellarg(\Drupal::service("file_system")->realpath($file));
 
   $colorspace = exec(escapeshellcmd("$identify -quiet -format %[colorspace] ") . $escaped_file, $output, $procret);
 
@@ -568,7 +590,12 @@ function islandora_large_image_get_colorspace($file) {
  */
 function islandora_large_image_get_identify() {
   // Get path for convert.
-  $convert = variable_get('imagemagick_convert', 'convert');
+  // @FIXME
+// // @FIXME
+// // This looks like another module's variable. You'll need to rewrite this call
+// // to ensure that it uses the correct configuration object.
+// $convert = variable_get('imagemagick_convert', 'convert');
+
 
   // Replace "convert" with "identify".
   $identify = str_replace('convert', 'identify', $convert);

@@ -19,7 +19,12 @@
 function islandora_large_image_image_upload_form(array $form, array &$form_state) {
   $upload_size = min((int) ini_get('post_max_size'), (int) ini_get('upload_max_filesize'));
   $extensions = array('tiff tif jp2');
-  $upload_required = variable_get('islandora_require_obj_upload', TRUE);
+  // @FIXME
+// // @FIXME
+// // This looks like another module's variable. You'll need to rewrite this call
+// // to ensure that it uses the correct configuration object.
+// $upload_required = variable_get('islandora_require_obj_upload', TRUE);
+
   return array(
     'file' => array(
       '#title' => t('Image'),
@@ -56,7 +61,7 @@ function islandora_large_image_image_upload_form_submit(array $form, array &$for
       $ds = $object['OBJ'];
     }
     $file = file_load($form_state['values']['file']);
-    $path = drupal_realpath($file->uri);
+    $path = \Drupal::service("file_system")->realpath($file->uri);
     $ds->setContentFromFile($path, FALSE);
     $ds->label = $file->filename;
     $ds->mimetype = $file->filemime;
