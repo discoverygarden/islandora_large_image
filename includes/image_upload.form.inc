@@ -18,28 +18,28 @@
  */
 function islandora_large_image_image_upload_form(array $form, array &$form_state) {
   $upload_size = min((int) ini_get('post_max_size'), (int) ini_get('upload_max_filesize'));
-  $extensions = array('tiff tif jp2');
+  $extensions = ['tiff tif jp2'];
   // @FIXME
 // // @FIXME
 // // This looks like another module's variable. You'll need to rewrite this call
 // // to ensure that it uses the correct configuration object.
 // $upload_required = variable_get('islandora_require_obj_upload', TRUE);
 
-  return array(
-    'file' => array(
+  return [
+    'file' => [
       '#title' => t('Image'),
       '#type' => 'managed_file',
       '#required' => $upload_required,
-      '#description' => t('Select image to upload.<br/>Files must be less than <strong>@size MB.</strong><br/>Allowed file types: <strong>@ext.</strong>', array('@size' => $upload_size, '@ext' => $extensions[0])),
+      '#description' => t('Select image to upload.<br/>Files must be less than <strong>@size MB.</strong><br/>Allowed file types: <strong>@ext.</strong>', ['@size' => $upload_size, '@ext' => $extensions[0]]),
       '#default_value' => isset($form_state['values']['files']) ? $form_state['values']['files'] : NULL,
       '#upload_location' => 'temporary://',
-      '#upload_validators' => array(
+      '#upload_validators' => [
         'file_validate_extensions' => $extensions,
         // Assume its specified in MB.
-        'file_validate_size' => array($upload_size * 1024 * 1024),
-      ),
-    ),
-  );
+        'file_validate_size' => [$upload_size * 1024 * 1024],
+      ],
+    ],
+  ];
 }
 
 /**

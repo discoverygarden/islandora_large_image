@@ -10,10 +10,10 @@
  */
 function islandora_large_image_requirements($phase) {
   module_load_include('inc', 'islandora', 'includes/utilities');
-  $requirements = array();
+  $requirements = [];
   if ($phase == 'install') {
     $t = 't';
-    $out = array();
+    $out = [];
     $ret = 1;
 
     $command = 'command -v kdu_compress >/dev/null 2>&1';
@@ -25,12 +25,12 @@ function islandora_large_image_requirements($phase) {
     exec($command, $out, $ret);
 
     if ($ret != 0) {
-      $requirements['kakadu'] = array(
+      $requirements['kakadu'] = [
         'title' => $t("Kakadu Image Compression"),
         'value' => $t("Not installed"),
         'severity' => REQUIREMENT_ERROR,
         'description' => $t('Ensure that adore-djatoka is installed and that kdu_compress is accessible by PHP.'),
-      );
+      ];
     }
   }
   return $requirements;

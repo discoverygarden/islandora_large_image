@@ -39,10 +39,10 @@ function islandora_large_image_create_jp2_derivative(AbstractObject $object, $fo
   module_load_include('inc', 'islandora_large_image', 'includes/utilities');
   $base_name = str_replace(':', '-', $object->id);
   if ($force || !isset($object['JP2'])) {
-    $to_return = array(
+    $to_return = [
       'success' => FALSE,
-      'messages' => array(),
-    );
+      'messages' => [],
+    ];
     $uploaded_file = islandora_large_image_get_uploaded_file($object);
     // @FIXME
 // // @FIXME
@@ -96,11 +96,11 @@ function islandora_large_image_create_jp2_derivative(AbstractObject $object, $fo
           );
         }
         if ($derivative_file === FALSE) {
-          $to_return['messages'][] = array(
+          $to_return['messages'][] = [
             'message' => t("Kakadu failed. Trying ImageMagick ..."),
             'type' => 'dsm',
             'severity' => 'status',
-          );
+          ];
           // Force retry with ImageMagick if Kakadu has failed.
           $kakadu = FALSE;
         }
@@ -108,7 +108,7 @@ function islandora_large_image_create_jp2_derivative(AbstractObject $object, $fo
       if (!$kakadu) {
         $args = islandora_large_image_get_args($lossless);
         if ($depth < 8) {
-          $args = array_merge($args, array("-depth 8"));
+          $args = array_merge($args, ['-depth 8']);
         }
         $derivative_file = islandora_large_image_imagemagick_convert(
           $uploaded_file,
@@ -117,28 +117,28 @@ function islandora_large_image_create_jp2_derivative(AbstractObject $object, $fo
       }
     }
     if ($derivative_file === FALSE) {
-      $to_return['messages'][] = array(
+      $to_return['messages'][] = [
         'message' => t('Failed to create JP2 derivative.'),
         'type' => 'watchdog',
         'severity' => WATCHDOG_ERROR,
-      );
+      ];
     }
     else {
       $added_successfully = islandora_large_image_add_datastream($object, 'JP2', $derivative_file, 'image/jp2', t('JPEG 2000'));
       if (TRUE === $added_successfully) {
-        $to_return['messages'][] = array(
+        $to_return['messages'][] = [
           'message' => t('Created JP2 derivative.'),
           'type' => 'dsm',
           'severity' => 'status',
-        );
+        ];
         $to_return['success'] = TRUE;
       }
       else {
-        $to_return['messages'][] = array(
-          'message' => t('Failed to add JP2 derivative to the object. Error message: @message', array('@message' => $added_successfully)),
+        $to_return['messages'][] = [
+          'message' => t('Failed to add JP2 derivative to the object. Error message: @message', ['@message' => $added_successfully]),
           'type' => 'dsm',
           'severity' => 'warning',
-        );
+        ];
       }
     }
     file_unmanaged_delete($uploaded_file);
@@ -162,13 +162,13 @@ function islandora_large_image_create_jp2_derivative(AbstractObject $object, $fo
 function islandora_large_image_create_jpg_derivative(AbstractObject $object, $force = TRUE) {
   $base_name = str_replace(':', '-', $object->id);
   if ($force || !isset($object['JPG'])) {
-    $to_return = array(
+    $to_return = [
       'success' => FALSE,
-      'messages' => array(),
-    );
+      'messages' => [],
+    ];
 
     $uploaded_file = islandora_large_image_get_uploaded_file($object);
-    $args = array();
+    $args = [];
     $args[] = '-resize ' . escapeshellarg("600 x 800");
     // @FIXME
 // // @FIXME
@@ -178,28 +178,28 @@ function islandora_large_image_create_jpg_derivative(AbstractObject $object, $fo
 
     $derivative_file = islandora_large_image_imagemagick_convert($uploaded_file, "temporary://{$base_name}_JPG.jpg", $args);
     if ($derivative_file === FALSE) {
-      $to_return['messages'][] = array(
+      $to_return['messages'][] = [
         'message' => t('Failed to create JPG derivative.'),
         'type' => 'watchdog',
         'severity' => WATCHDOG_WARNING,
-      );
+      ];
     }
     else {
       $added_successfully = islandora_large_image_add_datastream($object, 'JPG', $derivative_file, 'image/jpeg', t('Medium sized JPEG'));
       if (TRUE === $added_successfully) {
-        $to_return['messages'][] = array(
+        $to_return['messages'][] = [
           'message' => t('Created JPG derivative.'),
           'type' => 'dsm',
           'severity' => 'status',
-        );
+        ];
         $to_return['success'] = TRUE;
       }
       else {
-        $to_return['messages'][] = array(
-          'message' => t('Failed to add JPG derivative to the object. Error message: @message', array('@message' => $added_successfully)),
+        $to_return['messages'][] = [
+          'message' => t('Failed to add JPG derivative to the object. Error message: @message', ['@message' => $added_successfully]),
           'type' => 'dsm',
           'severity' => 'warning',
-        );
+        ];
       }
     }
 
@@ -224,23 +224,23 @@ function islandora_large_image_create_jpg_derivative(AbstractObject $object, $fo
 function islandora_large_image_create_tn_derivative(AbstractObject $object, $force = TRUE) {
   $base_name = str_replace(':', '-', $object->id);
   if ($force || !isset($object['TN'])) {
-    $to_return = array(
+    $to_return = [
       'success' => FALSE,
-      'messages' => array(),
-    );
+      'messages' => [],
+    ];
 
     $uploaded_file = islandora_large_image_get_uploaded_file($object);
     $colorspace = islandora_large_image_get_colorspace($uploaded_file);
     if ($colorspace === FALSE) {
-      $to_return['messages'][] = array(
+      $to_return['messages'][] = [
         'message' => t('Failed to create TN derivative. Could not identify source OBJ.'),
         'type' => 'watchdog',
         'severity' => WATCHDOG_WARNING,
-      );
+      ];
     }
     else {
       // Only apply colorspace changes if not in the RGB family.
-      $args = array();
+      $args = [];
       // @FIXME
 // // @FIXME
 // // This looks like another module's variable. You'll need to rewrite this call
@@ -254,28 +254,28 @@ function islandora_large_image_create_tn_derivative(AbstractObject $object, $for
       }
       $derivative_file = islandora_large_image_imagemagick_convert($uploaded_file, "temporary://{$base_name}_TN.jpg", $args);
       if ($derivative_file === FALSE) {
-        $to_return['messages'][] = array(
+        $to_return['messages'][] = [
           'message' => t('Failed to create TN derivative.'),
           'type' => 'watchdog',
           'severity' => WATCHDOG_WARNING,
-        );
+        ];
       }
       else {
         $added_successfully = islandora_large_image_add_datastream($object, 'TN', $derivative_file, 'image/jpeg', t('Thumbnail'));
         if (TRUE === $added_successfully) {
-          $to_return['messages'][] = array(
+          $to_return['messages'][] = [
             'message' => t('Created TN derivative.'),
             'type' => 'dsm',
             'severity' => 'status',
-          );
+          ];
           $to_return['success'] = TRUE;
         }
         else {
-          $to_return['messages'][] = array(
-            'message' => t('Failed to add TN derivative to the object. Error message: @message', array('@message' => $added_successfully)),
+          $to_return['messages'][] = [
+            'message' => t('Failed to add TN derivative to the object. Error message: @message', ['@message' => $added_successfully]),
             'type' => 'dsm',
             'severity' => 'warning',
-          );
+          ];
         }
       }
     }
@@ -314,7 +314,7 @@ function islandora_large_image_kdu_compress($src, $dest, $args = NULL) {
 
   // First, convert to (potentially uncompressed) TIFF file.
   if (!islandora_large_image_is_uncompressed_tiff($src)) {
-    $c_args = array();
+    $c_args = [];
 
     // If the source is not a TIFF, or we have been instructed to uncompress
     // TIFFs, make it so.
@@ -332,7 +332,7 @@ function islandora_large_image_kdu_compress($src, $dest, $args = NULL) {
   $dest = \Drupal::service("file_system")->realpath($dest);
   $ret = -1;
   $ret_palette = 0;
-  $output = array();
+  $output = [];
   // @FIXME
 // // @FIXME
 // // This looks like another module's variable. You'll need to rewrite this call
@@ -383,24 +383,24 @@ function islandora_large_image_imagemagick_convert($src, $dest, $args) {
     $src = $src . '[0]';
   }
   $dest = \Drupal::service("file_system")->realpath($dest);
-  $context = array(
+  $context = [
     'source' => $src,
     'destination' => $dest,
-  );
+  ];
   \Drupal::moduleHandler()->alter('imagemagick_arguments', $args, $context);
 
   // To make use of ImageMagick 6's parenthetical command grouping we need to
   // make the $source image the first parameter and $dest the last.
   // See http://www.imagemagick.org/Usage/basics/#cmdline
   $command = escapeshellarg($src) . ' ' . implode(' ', $args) . ' ' . escapeshellarg($dest);
-  $output = array();
+  $output = [];
   $ret = -1;
   if (_imagemagick_convert_exec($command, $output, $ret) !== TRUE) {
-    $variables = array(
+    $variables = [
       '@ret' => $ret,
       '@command' => $command,
       '@output' => implode('<br/>', $output),
-    );
+    ];
     \Drupal::logger('islandora_large_image')->error('ImageMagick failed to convert.<br/>Error: @ret<br/>Command: @command <br/>Output @output', $variables);
     return FALSE;
   }
@@ -443,9 +443,9 @@ function islandora_large_image_add_datastream(AbstractObject $object, $dsid, $fi
     return TRUE;
   }
   catch (exception $e) {
-    $variables = array(
+    $variables = [
       '@ret' => $e->getTraceAsString(),
-    );
+    ];
     // Adding watchdog here, islandora_large_image_add_datastream() calls will
     // add a dsm statement, but not a watchdog entry.
     \Drupal::logger('islandora_large_image')->error('Large Image failed to ingest data stream.<br/>Stack: @ret', []);
@@ -619,7 +619,7 @@ function islandora_large_image_get_identify() {
  */
 function islandora_large_image_create_all_derivatives(AbstractObject $object, $force = TRUE) {
   if (!isset($object['OBJ'])) {
-    drupal_set_message(t('Could not create image derivatives for %s. No image file was uploaded.', array('%s' => $object->id)), 'error');
+    drupal_set_message(t('Could not create image derivatives for %s. No image file was uploaded.', ['%s' => $object->id]), 'error');
     return FALSE;
   }
   $base_name = str_replace(':', '-', $object->id);

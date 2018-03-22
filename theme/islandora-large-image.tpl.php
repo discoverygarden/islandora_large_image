@@ -2,7 +2,7 @@
 
 /**
  * @file
- * This is the template file for the object page for large image
+ * This is the template file for the object page for large image.
  *
  * Available variables:
  * - $islandora_object: The Islandora object rendered in this template file

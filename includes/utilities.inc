@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @file
  * Utility functions.
@@ -25,7 +26,7 @@ function islandora_large_image_check_imagemagick_for_jpeg2000() {
     $filtered = preg_filter("/.*JP2.*JPEG-2000\s+File\s+Format\s+Syntax/", "\\0", $command_output);
     $supports = FALSE;
     foreach ($filtered as $f) {
-      $s = array();
+      $s = [];
       if (preg_match_all('/([r-][w-].)/', $f, $s)) {
         if (strpos($s[1][0], 'w') !== FALSE) {
           $supports = TRUE;
