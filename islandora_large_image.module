@@ -8,23 +8,6 @@
 use Drupal\Core\Url;
 
 /**
- * Implements hook_menu().
- */
-function islandora_large_image_menu() {
-  $items = array();
-  $items['admin/islandora/solution_pack_config/large_image'] = array(
-    'title' => 'Large Images',
-    'description' => 'Define ingest behavior, and select viewer image viewer.',
-    'page callback' => 'drupal_get_form',
-    'access arguments' => array('administer site configuration'),
-    'page arguments' => array('islandora_large_image_admin'),
-    'file' => 'includes/admin.form.inc',
-    'type' => MENU_NORMAL_ITEM,
-  );
-  return $items;
-}
-
-/**
  * Implements hook_theme().
  *
  * We supply a pattern so we can overide templates at the theme level if needed.

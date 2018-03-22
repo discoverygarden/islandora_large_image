@@ -1,0 +1,7 @@
+islandora_large_image.admin:
+  path: '/admin/config/islandora/solution_pack_config/large_image'
+  defaults:
+    _title: 'Large Images'
+    _form: '\Drupal\islandora_large_image\Form\Admin'
+  requirements:
+    _permission: 'administer site configuration'

@@ -1,0 +1,5 @@
+islandora_large_image.admin:
+  route_name: islandora_large_image.admin
+  parent: islandora.solution_packs_admin
+  title: 'Large Images'
+  description: 'Define ingest behavior, and select viewer image viewer.'
