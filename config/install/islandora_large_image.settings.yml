@@ -1,0 +1,4 @@
+islandora_kakadu_url: /usr/bin/kdu_compress
+islandora_lossless: false
+islandora_use_kakadu: false
+islandora_large_image_uncompress_tiff: true

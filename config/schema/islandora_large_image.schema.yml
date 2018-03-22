@@ -1,0 +1,12 @@
+islandora_large_image.settings:
+  type: mapping
+  label: Settings
+  mapping:
+    islandora_kakadu_url:
+      type: string
+    islandora_lossless:
+      type: boolean
+    islandora_use_kakadu:
+      type: boolean
+    islandora_large_image_uncompress_tiff:
+      type: boolean
