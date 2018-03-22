@@ -66,8 +66,8 @@ class Admin extends ConfigFormBase {
         '#title' => t("Use Kakadu for image compression"),
         '#disabled' => !$imagemagick_supports_jp2000,
         '#default_value' => $get_default_value('islandora_use_kakadu', !$imagemagick_supports_jp2000) || !$imagemagick_supports_jp2000,
-        '#description' => t("!kakadu offers faster derivative creation than the standard ImageMagick package. %magick_info", [
-          '!kakadu' => \Drupal::l(t('Kakadu'), \Drupal\Core\Url::fromUri('http://www.kakadusoftware.com/')),
+        '#description' => t("@kakadu offers faster derivative creation than the standard ImageMagick package. %magick_info", [
+          '@kakadu' => \Drupal::l(t('Kakadu'), \Drupal\Core\Url::fromUri('http://www.kakadusoftware.com/')),
           '%magick_info' => $imagemagick_supports_jp2000 ?
           t('ImageMagick reports support for JPEG 2000.') :
           t('ImageMagick does not report support for JPEG 2000.'),
@@ -90,8 +90,8 @@ class Admin extends ConfigFormBase {
         '#type' => 'textfield',
         '#title' => t("Path to Kakadu"),
         '#default_value' => $kakadu,
-        '#description' => t('Path to the kdu_compress executable.<br/>!msg', [
-          '!msg' => islandora_executable_available_message($kakadu)
+        '#description' => t('Path to the kdu_compress executable.<br/>@msg', [
+          '@msg' => islandora_executable_available_message($kakadu)
           ]),
         '#prefix' => '<div id="kakadu-wrapper">',
         '#suffix' => '</div>',

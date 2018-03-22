@@ -315,7 +315,7 @@ function islandora_large_image_preprocess_islandora_object_print(array &$variabl
 // l() expects a Url object, created from a route name or external URI.
 // $variables['content']['link'] = array(
 //       '#weight' => -10,
-//       '#markup' => t('Persistent link: !link', array("!link" => l($url, $url))),
+//       '#markup' => t('Persistent link: @link', array('@link' => l($url, $url))),
 //     );
 
   }

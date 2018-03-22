@@ -399,9 +399,9 @@ function islandora_large_image_imagemagick_convert($src, $dest, $args) {
     $variables = array(
       '@ret' => $ret,
       '@command' => $command,
-      '!output' => implode('<br/>', $output),
+      '@output' => implode('<br/>', $output),
     );
-    \Drupal::logger('islandora_large_image')->error('ImageMagick failed to convert.<br/>Error: @ret<br/>Command: @command <br/>Output !output', []);
+    \Drupal::logger('islandora_large_image')->error('ImageMagick failed to convert.<br/>Error: @ret<br/>Command: @command <br/>Output @output', $variables);
     return FALSE;
   }
   return $dest;
