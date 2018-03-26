@@ -267,7 +267,7 @@ function islandora_large_image_islandora_sp_large_image_cmodel_islandora_ingest_
     'islandora_large_image_upload' => [
       'weight' => 10,
       'type' => 'form',
-      'form_id' => 'islandora_large_image_image_upload_form',
+      'form_class' => 'Drupal\islandora_large_image\Form\ImageUpload',
       'module' => 'islandora_large_image',
       'file' => 'includes/image_upload.form.inc',
     ],
