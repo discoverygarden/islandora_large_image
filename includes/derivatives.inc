@@ -5,6 +5,12 @@
  * This file contains image manipulation functions used in the large image SP.
  */
 
+use Drupal\Core\Logger\RfcLogLevel;
+
+use Drupal\imagemagick\ImagemagickExecArguments;
+
+use Drupal\islandora\MimeDetect;
+
 /**
  * Fetches the upload image file from Fedora, and saves it to a temp location.
  *
@@ -44,11 +50,7 @@ function islandora_large_image_create_jp2_derivative(AbstractObject $object, $fo
       'messages' => [],
     ];
     $uploaded_file = islandora_large_image_get_uploaded_file($object);
-    // @FIXME
-// // @FIXME
-// // This looks like another module's variable. You'll need to rewrite this call
-// // to ensure that it uses the correct configuration object.
-// $lossless = variable_get('islandora_lossless', FALSE);
+    $lossless = \Drupal::config('islandora_large_image.settings')->get('islandora_lossless');
 
     if (islandora_large_image_is_jp2($uploaded_file) && !$lossless) {
       $derivative_file = $uploaded_file;
@@ -58,11 +60,7 @@ function islandora_large_image_create_jp2_derivative(AbstractObject $object, $fo
       $depth = islandora_large_image_get_bit_depth($uploaded_file);
 
       // Create JP2 with kakadu.
-      // @FIXME
-// // @FIXME
-// // This looks like another module's variable. You'll need to rewrite this call
-// // to ensure that it uses the correct configuration object.
-// $kakadu = variable_get('islandora_use_kakadu', !islandora_large_image_check_imagemagick_for_jpeg2000());
+      $kakadu = \Drupal::config('islandora_large_image.settings')->get('islandora_use_kakadu');
 
       $mime = strtolower($object['OBJ']->mimetype);
       if ($mime == 'image/jpeg' || $mime == 'image/jpg' || $depth < 8) {
@@ -120,7 +118,7 @@ function islandora_large_image_create_jp2_derivative(AbstractObject $object, $fo
       $to_return['messages'][] = [
         'message' => t('Failed to create JP2 derivative.'),
         'type' => 'watchdog',
-        'severity' => WATCHDOG_ERROR,
+        'severity' => RfcLogLevel::ERROR,
       ];
     }
     else {
@@ -170,18 +168,14 @@ function islandora_large_image_create_jpg_derivative(AbstractObject $object, $fo
     $uploaded_file = islandora_large_image_get_uploaded_file($object);
     $args = [];
     $args[] = '-resize ' . escapeshellarg("600 x 800");
-    // @FIXME
-// // @FIXME
-// // This looks like another module's variable. You'll need to rewrite this call
-// // to ensure that it uses the correct configuration object.
-// $args[] = '-quality ' . escapeshellarg(variable_get('imagemagick_quality', 75));
+    $args[] = escapeshellarg(\Drupal::config('imagemagick.settings')->get('quality'));
 
     $derivative_file = islandora_large_image_imagemagick_convert($uploaded_file, "temporary://{$base_name}_JPG.jpg", $args);
     if ($derivative_file === FALSE) {
       $to_return['messages'][] = [
         'message' => t('Failed to create JPG derivative.'),
         'type' => 'watchdog',
-        'severity' => WATCHDOG_WARNING,
+        'severity' => RfcLogLevel::WARNING,
       ];
     }
     else {
@@ -235,17 +229,13 @@ function islandora_large_image_create_tn_derivative(AbstractObject $object, $for
       $to_return['messages'][] = [
         'message' => t('Failed to create TN derivative. Could not identify source OBJ.'),
         'type' => 'watchdog',
-        'severity' => WATCHDOG_WARNING,
+        'severity' => RfcLogLevel::WARNING,
       ];
     }
     else {
       // Only apply colorspace changes if not in the RGB family.
       $args = [];
-      // @FIXME
-// // @FIXME
-// // This looks like another module's variable. You'll need to rewrite this call
-// // to ensure that it uses the correct configuration object.
-// $args[] = '-quality ' . escapeshellarg(variable_get('imagemagick_quality', 75));
+      $args[] = escapeshellarg(\Drupal::config('imagemagick.settings')->get('quality'));
 
       $args[] = '-resize ' . escapeshellarg("200 x 200");
       $isrgb = stripos($colorspace, 'rgb');
@@ -257,7 +247,7 @@ function islandora_large_image_create_tn_derivative(AbstractObject $object, $for
         $to_return['messages'][] = [
           'message' => t('Failed to create TN derivative.'),
           'type' => 'watchdog',
-          'severity' => WATCHDOG_WARNING,
+          'severity' => RfcLogLevel::WARNING,
         ];
       }
       else {
@@ -333,11 +323,7 @@ function islandora_large_image_kdu_compress($src, $dest, $args = NULL) {
   $ret = -1;
   $ret_palette = 0;
   $output = [];
-  // @FIXME
-// // @FIXME
-// // This looks like another module's variable. You'll need to rewrite this call
-// // to ensure that it uses the correct configuration object.
-// $kdu_compress = variable_get('islandora_kakadu_url', 'kdu_compress');
+  $kakadu = \Drupal::config('islandora_large_image.settings')->get('kdu_compress');
 
   $command = "$kdu_compress -i \"$src\" -o \"$dest\" $args 2>&1";
   exec($command, $output, $ret);
@@ -368,6 +354,8 @@ function islandora_large_image_kdu_compress($src, $dest, $args = NULL) {
  *   The source file uri to convert from.
  * @param string $dest
  *   The destination file uri to convert into.
+ * @param array $raw_arguments
+ *   The arguments for convert.
  *
  * @args int $width
  *   The source file to convert from.
@@ -377,31 +365,30 @@ function islandora_large_image_kdu_compress($src, $dest, $args = NULL) {
  * @return string
  *   The destination file path if successful otherwise FALSE.
  */
-function islandora_large_image_imagemagick_convert($src, $dest, $args) {
+function islandora_large_image_imagemagick_convert($src, $dest, $raw_arguments) {
   $src = \Drupal::service("file_system")->realpath($src);
   if (islandora_large_image_is_tiff($src)) {
     $src = $src . '[0]';
   }
   $dest = \Drupal::service("file_system")->realpath($dest);
-  $context = [
-    'source' => $src,
-    'destination' => $dest,
-  ];
-  \Drupal::moduleHandler()->alter('imagemagick_arguments', $args, $context);
-
-  // To make use of ImageMagick 6's parenthetical command grouping we need to
-  // make the $source image the first parameter and $dest the last.
-  // See http://www.imagemagick.org/Usage/basics/#cmdline
-  $command = escapeshellarg($src) . ' ' . implode(' ', $args) . ' ' . escapeshellarg($dest);
-  $output = [];
+  $exec_manager = \Drupal::service('imagemagick.exec_manager');
+  $arguments = new ImagemagickExecArguments($exec_manager);
+  $arguments->setSourceLocalPath($src);
+  $arguments->setDestinationLocalPath($dest);
+  foreach ($raw_arguments as $argument) {
+    $arguments->addArgument($argument);
+  }
+  \Drupal::moduleHandler()->alter('imagemagick_arguments', $arguments, $command);
+  $args = $arguments->getArguments();
+  $output = '';
   $ret = -1;
-  if (_imagemagick_convert_exec($command, $output, $ret) !== TRUE) {
+  if ($exec_manager->execute('convert', $arguments, $output, $ret) !== TRUE) {
     $variables = [
       '@ret' => $ret,
-      '@command' => $command,
-      '@output' => implode('<br/>', $output),
+      '@args' => implode('<br/>', $arguments->getArguments()),
+      '@output' => $output,
     ];
-    \Drupal::logger('islandora_large_image')->error('ImageMagick failed to convert.<br/>Error: @ret<br/>Command: @command <br/>Output @output', $variables);
+    \Drupal::logger('islandora_large_image')->error('ImageMagick failed to convert.<br/>Error: @ret<br/>Args: @args <br/>Output @output', $variables);
     return FALSE;
   }
   return $dest;
@@ -580,7 +567,7 @@ function islandora_large_image_get_colorspace($file) {
 }
 
 /**
- * Attempt to get the "identify" executable...
+ * Attempt to get the "identify" executable.
  *
  * Assume convert is sanely named, and that identify can be obtained from the
  * same place.
@@ -589,18 +576,7 @@ function islandora_large_image_get_colorspace($file) {
  *   The command to run for "identify".
  */
 function islandora_large_image_get_identify() {
-  // Get path for convert.
-  // @FIXME
-// // @FIXME
-// // This looks like another module's variable. You'll need to rewrite this call
-// // to ensure that it uses the correct configuration object.
-// $convert = variable_get('imagemagick_convert', 'convert');
-
-
-  // Replace "convert" with "identify".
-  $identify = str_replace('convert', 'identify', $convert);
-
-  return $identify;
+  return \Drupal::config('imagemagick.settings')->get('path_to_binaries') . 'identify';
 }
 
 /**
