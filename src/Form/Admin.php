@@ -104,11 +104,11 @@ class Admin extends ConfigFormBase {
           ],
         ],
         'message' => ['#markup' => islandora_executable_available_message($kakadu)],
-          '#states' => [
-            'visible' => [
-              ':input[name="islandora_use_kakadu"]' => [
-                'checked' => TRUE,
-              ],
+        '#states' => [
+          'visible' => [
+            ':input[name="islandora_use_kakadu"]' => [
+              'checked' => TRUE,
+            ],
           ],
         ],
       ],
