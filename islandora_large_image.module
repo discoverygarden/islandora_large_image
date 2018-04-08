@@ -6,6 +6,7 @@
  */
 
 use Drupal\Core\Url;
+use Drupal\Core\Link;
 
 use Drupal\islandora\DublinCore;
 use Drupal\islandora\Authentication\Provider\TokenAuth;
@@ -141,7 +142,6 @@ function islandora_large_image_islandora_sp_large_image_cmodel_islandora_view_ob
  */
 function template_preprocess_islandora_large_image(&$variables) {
   $islandora_object = $variables['islandora_object'];
-  $repository = $islandora_object->repository;
   module_load_include('inc', 'islandora', 'includes/datastream');
   module_load_include('inc', 'islandora', 'includes/utilities');
   module_load_include('inc', 'islandora', 'includes/metadata');
@@ -199,7 +199,7 @@ function template_preprocess_islandora_large_image(&$variables) {
       if (isset($islandora_object['JP2']) && islandora_datastream_access(ISLANDORA_VIEW_OBJECTS, $islandora_object['JP2'])) {
         $clip = [
           '#theme' => 'islandora_openseadragon_clipper',
-          '#pid' => $object->id,
+          '#pid' => $islandora_object->id,
         ];
         $variables['image_clip'] = \Drupal::service('renderer')->render($clip);
 
@@ -214,7 +214,7 @@ function template_preprocess_islandora_large_image(&$variables) {
       '#title' => $islandora_object->label,
       '#uri' => Url::fromRoute('islandora.view_datastream_view', ['object' => $islandora_object->id, 'datastream' => 'JPG'])->toString(),
     ];
-    $islandora_content['islandora_content'] = \Drupal::service('renderer')->render($thumbnail_img);
+    $variables['islandora_content'] = \Drupal::service('renderer')->render($islandora_content);
   }
   else {
     $variables['islandora_content'] = NULL;
@@ -240,55 +240,48 @@ function islandora_large_image_islandora_sp_large_image_cmodel_islandora_ingest_
  * Implements hook_process_theme().
  */
 function islandora_large_image_preprocess_islandora_object_print(array &$variables) {
+  // @FIXME: complete once seadragon is ported.
   $object = $variables['object'];
   if (in_array('islandora:sp_large_image_cmodel', $object->models)) {
-    // @FIXME
-// url() expects a route name or an external URI.
-// $url = url("islandora/object/{$object->id}", array('absolute' => TRUE));
-
-    // @FIXME
-// l() expects a Url object, created from a route name or external URI.
-// $variables['content']['link'] = array(
-//       '#weight' => -10,
-//       '#markup' => t('Persistent link: @link', array('@link' => l($url, $url))),
-//     );
-
-  }
-}
-
-/**
- * Implements hook_process_theme().
- */
-function islandora_large_image_process_islandora_object_print(array &$variables) {
-  $object = $variables['object'];
-  if (in_array('islandora:sp_large_image_cmodel', $object->models)) {
+    $url = Url::fromRoute('islandora.view_object', ['object' => $object->id])->toString();
+    $variables['content']['link'] = t(
+      'Persistent link: @link',
+      [
+        '@link' => Link::createFromRoute(
+          $url,
+          'islandora.view_object',
+          ['object' => $object->id]
+        )->toString(),
+      ]
+    );
     $clip = isset($variables['clip']) ? $variables['clip'] : NULL;
-    // @FIXME
-// l() expects a Url object, created from a route name or external URI.
-// $variables['content']['buttons'] = array(
-//       '#access' => isset($clip),
-//       '#prefix' => '<div>',
-//       '#suffix' => '</div></br>',
-//       '#weight' => -5,
-//       'print' => array(
-//         '#prefix' => '<strong>',
-//         '#markup' => \Drupal::l(t('Print'), \Drupal\Core\Url::fromUri('javascript:window.print();')),
-//         '#suffix' => '</strong>',
-//         '#weight' => -5,
-//       ),
-//       '0' => array(
-//         '#markup' => ' | ',
-//         '#weight' => -5,
-//       ),
-//       'download_clip' => array(
-//         '#prefix' => '<strong>',
-//         '#markup' => l(t('Download Image'), "islandora/object/{$object->id}/download_clip", array(
-//                      'query' => array('clip' => $clip))),
-//         '#suffix' => '</strong>',
-//         '#weight' => -5,
-//       ),
-//     );
-
+    $variables['content']['buttons'] = [
+      '#access' => isset($clip),
+      '#prefix' => '<div>',
+      '#suffix' => '</div></br>',
+      '#weight' => -5,
+      'print' => [
+        '#prefix' => '<strong>',
+        '#markup' => Link::fromTextAndUrl(t('Print'), Url::fromUri('javascript:window.print();')),
+        '#suffix' => '</strong>',
+        '#weight' => -5,
+      ],
+      '0' => [
+        '#markup' => ' | ',
+        '#weight' => -5,
+      ],
+      'download_clip' => [
+        '#prefix' => '<strong>',
+        '#markup' => Link::createFromRoute(
+          t('Download Image'),
+          'SEADRAGON CLIP',
+          ['object' => $object->id],
+          ['query' => ['clip' => $clip]]
+        ),
+        '#suffix' => '</strong>',
+        '#weight' => -5,
+      ],
+    ];
   }
 }
 
