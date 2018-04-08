@@ -167,8 +167,8 @@ function islandora_large_image_create_jpg_derivative(AbstractObject $object, $fo
 
     $uploaded_file = islandora_large_image_get_uploaded_file($object);
     $args = [];
-    $args[] = '-resize ' . escapeshellarg("600 x 800");
-    $args[] = escapeshellarg(\Drupal::config('imagemagick.settings')->get('quality'));
+    $args[] = '-resize ' . escapeshellarg('600 x 800');
+    $args[] = '-quality ' . escapeshellarg(\Drupal::config('imagemagick.settings')->get('quality'));
 
     $derivative_file = islandora_large_image_imagemagick_convert($uploaded_file, "temporary://{$base_name}_JPG.jpg", $args);
     if ($derivative_file === FALSE) {
@@ -235,9 +235,9 @@ function islandora_large_image_create_tn_derivative(AbstractObject $object, $for
     else {
       // Only apply colorspace changes if not in the RGB family.
       $args = [];
-      $args[] = escapeshellarg(\Drupal::config('imagemagick.settings')->get('quality'));
+      $args[] = '-quality ' . escapeshellarg(\Drupal::config('imagemagick.settings')->get('quality'));
 
-      $args[] = '-resize ' . escapeshellarg("200 x 200");
+      $args[] = '-resize ' . escapeshellarg('200 x 200');
       $isrgb = stripos($colorspace, 'rgb');
       if ($isrgb === FALSE) {
         $args[] = '-colorspace sRGB';
@@ -310,24 +310,23 @@ function islandora_large_image_kdu_compress($src, $dest, $args = NULL) {
     // TIFFs, make it so.
     if (!islandora_large_image_is_tiff($src) ||
       \Drupal::config('islandora_large_image.settings')->get('islandora_large_image_uncompress_tiff')) {
-      $c_args[] = "-compress None";
+      $c_args[] = '-compress None';
     }
-    $c_dest = file_create_filename(\Drupal::service("file_system")->basename($src) . ".tif", 'temporary://');
+    $c_dest = file_create_filename(\Drupal::service('file_system')->basename($src) . '.tif', 'temporary://');
     $src = islandora_large_image_imagemagick_convert($src, $c_dest, $c_args);
     $unlink_source = TRUE;
   }
   // Default args.
   $args = isset($args) ? $args : '-rate 0.5 Clayers=1 Clevels=7 "Cprecincts={256,256},{256,256},{256,256},{128,128},{128,128},{64,64},{64,64},{32,32},{16,16}" "Corder=RPCL" "ORGgen_plt=yes" "ORGtparts=R" "Cblk={32,32}" Cuse_sop=yes';
-  $src = \Drupal::service("file_system")->realpath($src);
-  $dest = \Drupal::service("file_system")->realpath($dest);
+  $src = \Drupal::service('file_system')->realpath($src);
+  $dest = \Drupal::service('file_system')->realpath($dest);
   $ret = -1;
   $ret_palette = 0;
   $output = [];
-  $kakadu = \Drupal::config('islandora_large_image.settings')->get('kdu_compress');
+  $kdu_compress = \Drupal::config('islandora_large_image.settings')->get('islandora_kakadu_url');
 
   $command = "$kdu_compress -i \"$src\" -o \"$dest\" $args 2>&1";
   exec($command, $output, $ret);
-
   $output_string = implode(' ', $output);
 
   if (strpos($output_string, 'no_palette') !== FALSE) {
@@ -365,7 +364,7 @@ function islandora_large_image_kdu_compress($src, $dest, $args = NULL) {
  * @return string
  *   The destination file path if successful otherwise FALSE.
  */
-function islandora_large_image_imagemagick_convert($src, $dest, $raw_arguments) {
+function islandora_large_image_imagemagick_convert($src, $dest, array $raw_arguments) {
   $src = \Drupal::service("file_system")->realpath($src);
   if (islandora_large_image_is_tiff($src)) {
     $src = $src . '[0]';
@@ -378,11 +377,11 @@ function islandora_large_image_imagemagick_convert($src, $dest, $raw_arguments) 
   foreach ($raw_arguments as $argument) {
     $arguments->addArgument($argument);
   }
+  $command = 'convert';
   \Drupal::moduleHandler()->alter('imagemagick_arguments', $arguments, $command);
-  $args = $arguments->getArguments();
   $output = '';
   $ret = -1;
-  if ($exec_manager->execute('convert', $arguments, $output, $ret) !== TRUE) {
+  if ($exec_manager->execute($command, $arguments, $output, $ret) !== TRUE) {
     $variables = [
       '@ret' => $ret,
       '@args' => implode('<br/>', $arguments->getArguments()),
@@ -435,7 +434,7 @@ function islandora_large_image_add_datastream(AbstractObject $object, $dsid, $fi
     ];
     // Adding watchdog here, islandora_large_image_add_datastream() calls will
     // add a dsm statement, but not a watchdog entry.
-    \Drupal::logger('islandora_large_image')->error('Large Image failed to ingest data stream.<br/>Stack: @ret', []);
+    \Drupal::logger('islandora_large_image')->error('Large Image failed to ingest data stream.<br/>Stack: @ret', $variables);
     $message = $e->getMessage();
     return $message;
   }
