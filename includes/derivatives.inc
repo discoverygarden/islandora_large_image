@@ -5,6 +5,12 @@
  * This file contains image manipulation functions used in the large image SP.
  */
 
+use Drupal\Core\Logger\RfcLogLevel;
+
+use Drupal\imagemagick\ImagemagickExecArguments;
+
+use Drupal\islandora\MimeDetect;
+
 /**
  * Fetches the upload image file from Fedora, and saves it to a temp location.
  *
@@ -39,12 +45,13 @@ function islandora_large_image_create_jp2_derivative(AbstractObject $object, $fo
   module_load_include('inc', 'islandora_large_image', 'includes/utilities');
   $base_name = str_replace(':', '-', $object->id);
   if ($force || !isset($object['JP2'])) {
-    $to_return = array(
+    $to_return = [
       'success' => FALSE,
-      'messages' => array(),
-    );
+      'messages' => [],
+    ];
     $uploaded_file = islandora_large_image_get_uploaded_file($object);
-    $lossless = variable_get('islandora_lossless', FALSE);
+    $lossless = \Drupal::config('islandora_large_image.settings')->get('islandora_lossless');
+
     if (islandora_large_image_is_jp2($uploaded_file) && !$lossless) {
       $derivative_file = $uploaded_file;
     }
@@ -53,7 +60,8 @@ function islandora_large_image_create_jp2_derivative(AbstractObject $object, $fo
       $depth = islandora_large_image_get_bit_depth($uploaded_file);
 
       // Create JP2 with kakadu.
-      $kakadu = variable_get('islandora_use_kakadu', !islandora_large_image_check_imagemagick_for_jpeg2000());
+      $kakadu = \Drupal::config('islandora_large_image.settings')->get('islandora_use_kakadu');
+
       $mime = strtolower($object['OBJ']->mimetype);
       if ($mime == 'image/jpeg' || $mime == 'image/jpg' || $depth < 8) {
         $kakadu = FALSE;
@@ -62,7 +70,7 @@ function islandora_large_image_create_jp2_derivative(AbstractObject $object, $fo
       if (!$lossless) {
         $identify = islandora_large_image_get_identify();
         // Define all these variables in one call for a large performance gain.
-        $file_path = drupal_realpath($uploaded_file);
+        $file_path = \Drupal::service("file_system")->realpath($uploaded_file);
         list($height, $width, $y_resolution, $x_resolution) = explode(
           ',',
           exec(escapeshellcmd("$identify -format \"%h,%W,%y,%x\" $file_path"))
@@ -86,11 +94,11 @@ function islandora_large_image_create_jp2_derivative(AbstractObject $object, $fo
           );
         }
         if ($derivative_file === FALSE) {
-          $to_return['messages'][] = array(
+          $to_return['messages'][] = [
             'message' => t("Kakadu failed. Trying ImageMagick ..."),
             'type' => 'dsm',
             'severity' => 'status',
-          );
+          ];
           // Force retry with ImageMagick if Kakadu has failed.
           $kakadu = FALSE;
         }
@@ -98,7 +106,7 @@ function islandora_large_image_create_jp2_derivative(AbstractObject $object, $fo
       if (!$kakadu) {
         $args = islandora_large_image_get_args($lossless);
         if ($depth < 8) {
-          $args = array_merge($args, array("-depth 8"));
+          $args = array_merge($args, ['-depth 8']);
         }
         $derivative_file = islandora_large_image_imagemagick_convert(
           $uploaded_file,
@@ -107,28 +115,28 @@ function islandora_large_image_create_jp2_derivative(AbstractObject $object, $fo
       }
     }
     if ($derivative_file === FALSE) {
-      $to_return['messages'][] = array(
+      $to_return['messages'][] = [
         'message' => t('Failed to create JP2 derivative.'),
         'type' => 'watchdog',
-        'severity' => WATCHDOG_ERROR,
-      );
+        'severity' => RfcLogLevel::ERROR,
+      ];
     }
     else {
       $added_successfully = islandora_large_image_add_datastream($object, 'JP2', $derivative_file, 'image/jp2', t('JPEG 2000'));
       if (TRUE === $added_successfully) {
-        $to_return['messages'][] = array(
+        $to_return['messages'][] = [
           'message' => t('Created JP2 derivative.'),
           'type' => 'dsm',
           'severity' => 'status',
-        );
+        ];
         $to_return['success'] = TRUE;
       }
       else {
-        $to_return['messages'][] = array(
-          'message' => t('Failed to add JP2 derivative to the object. Error message: @message', array('@message' => $added_successfully)),
+        $to_return['messages'][] = [
+          'message' => t('Failed to add JP2 derivative to the object. Error message: @message', ['@message' => $added_successfully]),
           'type' => 'dsm',
           'severity' => 'warning',
-        );
+        ];
       }
     }
     file_unmanaged_delete($uploaded_file);
@@ -152,39 +160,40 @@ function islandora_large_image_create_jp2_derivative(AbstractObject $object, $fo
 function islandora_large_image_create_jpg_derivative(AbstractObject $object, $force = TRUE) {
   $base_name = str_replace(':', '-', $object->id);
   if ($force || !isset($object['JPG'])) {
-    $to_return = array(
+    $to_return = [
       'success' => FALSE,
-      'messages' => array(),
-    );
+      'messages' => [],
+    ];
 
     $uploaded_file = islandora_large_image_get_uploaded_file($object);
-    $args = array();
-    $args[] = '-resize ' . escapeshellarg("600 x 800");
-    $args[] = '-quality ' . escapeshellarg(variable_get('imagemagick_quality', 75));
+    $args = [];
+    $args[] = '-resize ' . escapeshellarg('600 x 800');
+    $args[] = '-quality ' . escapeshellarg(\Drupal::config('imagemagick.settings')->get('quality'));
+
     $derivative_file = islandora_large_image_imagemagick_convert($uploaded_file, "temporary://{$base_name}_JPG.jpg", $args);
     if ($derivative_file === FALSE) {
-      $to_return['messages'][] = array(
+      $to_return['messages'][] = [
         'message' => t('Failed to create JPG derivative.'),
         'type' => 'watchdog',
-        'severity' => WATCHDOG_WARNING,
-      );
+        'severity' => RfcLogLevel::WARNING,
+      ];
     }
     else {
       $added_successfully = islandora_large_image_add_datastream($object, 'JPG', $derivative_file, 'image/jpeg', t('Medium sized JPEG'));
       if (TRUE === $added_successfully) {
-        $to_return['messages'][] = array(
+        $to_return['messages'][] = [
           'message' => t('Created JPG derivative.'),
           'type' => 'dsm',
           'severity' => 'status',
-        );
+        ];
         $to_return['success'] = TRUE;
       }
       else {
-        $to_return['messages'][] = array(
-          'message' => t('Failed to add JPG derivative to the object. Error message: @message', array('@message' => $added_successfully)),
+        $to_return['messages'][] = [
+          'message' => t('Failed to add JPG derivative to the object. Error message: @message', ['@message' => $added_successfully]),
           'type' => 'dsm',
           'severity' => 'warning',
-        );
+        ];
       }
     }
 
@@ -209,53 +218,54 @@ function islandora_large_image_create_jpg_derivative(AbstractObject $object, $fo
 function islandora_large_image_create_tn_derivative(AbstractObject $object, $force = TRUE) {
   $base_name = str_replace(':', '-', $object->id);
   if ($force || !isset($object['TN'])) {
-    $to_return = array(
+    $to_return = [
       'success' => FALSE,
-      'messages' => array(),
-    );
+      'messages' => [],
+    ];
 
     $uploaded_file = islandora_large_image_get_uploaded_file($object);
     $colorspace = islandora_large_image_get_colorspace($uploaded_file);
     if ($colorspace === FALSE) {
-      $to_return['messages'][] = array(
+      $to_return['messages'][] = [
         'message' => t('Failed to create TN derivative. Could not identify source OBJ.'),
         'type' => 'watchdog',
-        'severity' => WATCHDOG_WARNING,
-      );
+        'severity' => RfcLogLevel::WARNING,
+      ];
     }
     else {
       // Only apply colorspace changes if not in the RGB family.
-      $args = array();
-      $args[] = '-quality ' . escapeshellarg(variable_get('imagemagick_quality', 75));
-      $args[] = '-resize ' . escapeshellarg("200 x 200");
+      $args = [];
+      $args[] = '-quality ' . escapeshellarg(\Drupal::config('imagemagick.settings')->get('quality'));
+
+      $args[] = '-resize ' . escapeshellarg('200 x 200');
       $isrgb = stripos($colorspace, 'rgb');
       if ($isrgb === FALSE) {
         $args[] = '-colorspace sRGB';
       }
       $derivative_file = islandora_large_image_imagemagick_convert($uploaded_file, "temporary://{$base_name}_TN.jpg", $args);
       if ($derivative_file === FALSE) {
-        $to_return['messages'][] = array(
+        $to_return['messages'][] = [
           'message' => t('Failed to create TN derivative.'),
           'type' => 'watchdog',
-          'severity' => WATCHDOG_WARNING,
-        );
+          'severity' => RfcLogLevel::WARNING,
+        ];
       }
       else {
         $added_successfully = islandora_large_image_add_datastream($object, 'TN', $derivative_file, 'image/jpeg', t('Thumbnail'));
         if (TRUE === $added_successfully) {
-          $to_return['messages'][] = array(
+          $to_return['messages'][] = [
             'message' => t('Created TN derivative.'),
             'type' => 'dsm',
             'severity' => 'status',
-          );
+          ];
           $to_return['success'] = TRUE;
         }
         else {
-          $to_return['messages'][] = array(
-            'message' => t('Failed to add TN derivative to the object. Error message: @message', array('@message' => $added_successfully)),
+          $to_return['messages'][] = [
+            'message' => t('Failed to add TN derivative to the object. Error message: @message', ['@message' => $added_successfully]),
             'type' => 'dsm',
             'severity' => 'warning',
-          );
+          ];
         }
       }
     }
@@ -294,29 +304,29 @@ function islandora_large_image_kdu_compress($src, $dest, $args = NULL) {
 
   // First, convert to (potentially uncompressed) TIFF file.
   if (!islandora_large_image_is_uncompressed_tiff($src)) {
-    $c_args = array();
+    $c_args = [];
 
     // If the source is not a TIFF, or we have been instructed to uncompress
     // TIFFs, make it so.
     if (!islandora_large_image_is_tiff($src) ||
-      variable_get('islandora_large_image_uncompress_tiff', TRUE)) {
-      $c_args[] = "-compress None";
+      \Drupal::config('islandora_large_image.settings')->get('islandora_large_image_uncompress_tiff')) {
+      $c_args[] = '-compress None';
     }
-    $c_dest = file_create_filename(drupal_basename($src) . ".tif", 'temporary://');
+    $c_dest = file_create_filename(\Drupal::service('file_system')->basename($src) . '.tif', 'temporary://');
     $src = islandora_large_image_imagemagick_convert($src, $c_dest, $c_args);
     $unlink_source = TRUE;
   }
   // Default args.
   $args = isset($args) ? $args : '-rate 0.5 Clayers=1 Clevels=7 "Cprecincts={256,256},{256,256},{256,256},{128,128},{128,128},{64,64},{64,64},{32,32},{16,16}" "Corder=RPCL" "ORGgen_plt=yes" "ORGtparts=R" "Cblk={32,32}" Cuse_sop=yes';
-  $src = drupal_realpath($src);
-  $dest = drupal_realpath($dest);
+  $src = \Drupal::service('file_system')->realpath($src);
+  $dest = \Drupal::service('file_system')->realpath($dest);
   $ret = -1;
   $ret_palette = 0;
-  $output = array();
-  $kdu_compress = variable_get('islandora_kakadu_url', 'kdu_compress');
+  $output = [];
+  $kdu_compress = \Drupal::config('islandora_large_image.settings')->get('islandora_kakadu_url');
+
   $command = "$kdu_compress -i \"$src\" -o \"$dest\" $args 2>&1";
   exec($command, $output, $ret);
-
   $output_string = implode(' ', $output);
 
   if (strpos($output_string, 'no_palette') !== FALSE) {
@@ -343,6 +353,8 @@ function islandora_large_image_kdu_compress($src, $dest, $args = NULL) {
  *   The source file uri to convert from.
  * @param string $dest
  *   The destination file uri to convert into.
+ * @param array $raw_arguments
+ *   The arguments for convert.
  *
  * @args int $width
  *   The source file to convert from.
@@ -352,31 +364,30 @@ function islandora_large_image_kdu_compress($src, $dest, $args = NULL) {
  * @return string
  *   The destination file path if successful otherwise FALSE.
  */
-function islandora_large_image_imagemagick_convert($src, $dest, $args) {
-  $src = drupal_realpath($src);
+function islandora_large_image_imagemagick_convert($src, $dest, array $raw_arguments) {
+  $src = \Drupal::service("file_system")->realpath($src);
   if (islandora_large_image_is_tiff($src)) {
     $src = $src . '[0]';
   }
-  $dest = drupal_realpath($dest);
-  $context = array(
-    'source' => $src,
-    'destination' => $dest,
-  );
-  drupal_alter('imagemagick_arguments', $args, $context);
-
-  // To make use of ImageMagick 6's parenthetical command grouping we need to
-  // make the $source image the first parameter and $dest the last.
-  // See http://www.imagemagick.org/Usage/basics/#cmdline
-  $command = escapeshellarg($src) . ' ' . implode(' ', $args) . ' ' . escapeshellarg($dest);
-  $output = array();
+  $dest = \Drupal::service("file_system")->realpath($dest);
+  $exec_manager = \Drupal::service('imagemagick.exec_manager');
+  $arguments = new ImagemagickExecArguments($exec_manager);
+  $arguments->setSourceLocalPath($src);
+  $arguments->setDestinationLocalPath($dest);
+  foreach ($raw_arguments as $argument) {
+    $arguments->addArgument($argument);
+  }
+  $command = 'convert';
+  \Drupal::moduleHandler()->alter('imagemagick_arguments', $arguments, $command);
+  $output = '';
   $ret = -1;
-  if (_imagemagick_convert_exec($command, $output, $ret) !== TRUE) {
-    $variables = array(
+  if ($exec_manager->execute($command, $arguments, $output, $ret) !== TRUE) {
+    $variables = [
       '@ret' => $ret,
-      '@command' => $command,
-      '!output' => implode('<br/>', $output),
-    );
-    watchdog('islandora_large_image', 'ImageMagick failed to convert.<br/>Error: @ret<br/>Command: @command <br/>Output !output', $variables, WATCHDOG_ERROR);
+      '@args' => implode('<br/>', $arguments->getArguments()),
+      '@output' => $output,
+    ];
+    \Drupal::logger('islandora_large_image')->error('ImageMagick failed to convert.<br/>Error: @ret<br/>Args: @args <br/>Output @output', $variables);
     return FALSE;
   }
   return $dest;
@@ -418,15 +429,12 @@ function islandora_large_image_add_datastream(AbstractObject $object, $dsid, $fi
     return TRUE;
   }
   catch (exception $e) {
-    $variables = array(
+    $variables = [
       '@ret' => $e->getTraceAsString(),
-    );
+    ];
     // Adding watchdog here, islandora_large_image_add_datastream() calls will
     // add a dsm statement, but not a watchdog entry.
-    watchdog('islandora_large_image',
-      'Large Image failed to ingest data stream.<br/>Stack: @ret',
-      $variables,
-      WATCHDOG_ERROR);
+    \Drupal::logger('islandora_large_image')->error('Large Image failed to ingest data stream.<br/>Stack: @ret', $variables);
     $message = $e->getMessage();
     return $message;
   }
@@ -481,7 +489,7 @@ function islandora_large_image_get_args($lossless) {
 function islandora_large_image_is_uncompressed_tiff($file) {
   $identify = islandora_large_image_get_identify();
 
-  $escaped_file = escapeshellarg(drupal_realpath($file));
+  $escaped_file = escapeshellarg(\Drupal::service("file_system")->realpath($file));
 
   $compression = exec(escapeshellcmd("$identify -format \"%C\" ") . $escaped_file);
 
@@ -502,7 +510,7 @@ function islandora_large_image_is_uncompressed_tiff($file) {
 function islandora_large_image_is_tiff($file) {
   $identify = islandora_large_image_get_identify();
 
-  $escaped_file = escapeshellarg(drupal_realpath($file));
+  $escaped_file = escapeshellarg(\Drupal::service("file_system")->realpath($file));
 
   $codec = exec(escapeshellcmd("$identify -format \"%m\" ") . $escaped_file);
 
@@ -528,7 +536,7 @@ function islandora_large_image_is_tiff($file) {
 function islandora_large_image_is_jp2($file) {
   $identify = islandora_large_image_get_identify();
 
-  $escaped_file = escapeshellarg(drupal_realpath($file));
+  $escaped_file = escapeshellarg(\Drupal::service("file_system")->realpath($file));
 
   $codec = exec(escapeshellcmd("$identify -format \"%m\" ") . $escaped_file);
 
@@ -550,7 +558,7 @@ function islandora_large_image_is_jp2($file) {
 function islandora_large_image_get_colorspace($file) {
   $identify = islandora_large_image_get_identify();
 
-  $escaped_file = escapeshellarg(drupal_realpath($file));
+  $escaped_file = escapeshellarg(\Drupal::service("file_system")->realpath($file));
 
   $colorspace = exec(escapeshellcmd("$identify -quiet -format %[colorspace] ") . $escaped_file, $output, $procret);
 
@@ -558,7 +566,7 @@ function islandora_large_image_get_colorspace($file) {
 }
 
 /**
- * Attempt to get the "identify" executable...
+ * Attempt to get the "identify" executable.
  *
  * Assume convert is sanely named, and that identify can be obtained from the
  * same place.
@@ -567,13 +575,7 @@ function islandora_large_image_get_colorspace($file) {
  *   The command to run for "identify".
  */
 function islandora_large_image_get_identify() {
-  // Get path for convert.
-  $convert = variable_get('imagemagick_convert', 'convert');
-
-  // Replace "convert" with "identify".
-  $identify = str_replace('convert', 'identify', $convert);
-
-  return $identify;
+  return \Drupal::config('imagemagick.settings')->get('path_to_binaries') . 'identify';
 }
 
 /**
@@ -592,7 +594,7 @@ function islandora_large_image_get_identify() {
  */
 function islandora_large_image_create_all_derivatives(AbstractObject $object, $force = TRUE) {
   if (!isset($object['OBJ'])) {
-    drupal_set_message(t('Could not create image derivatives for %s. No image file was uploaded.', array('%s' => $object->id)), 'error');
+    drupal_set_message(t('Could not create image derivatives for %s. No image file was uploaded.', ['%s' => $object->id]), 'error');
     return FALSE;
   }
   $base_name = str_replace(':', '-', $object->id);

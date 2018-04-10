@@ -1,0 +1,10 @@
+name: 'Islandora Large Image Solution Pack'
+description: 'A default Islandora module to handle large images'
+dependencies:
+  - :islandora
+  - imagemagick:imagemagick
+package: 'Islandora Solution Packs'
+configure: islandora_large_image.admin
+core: 8.x
+type: module
+php: '5.5.9'
