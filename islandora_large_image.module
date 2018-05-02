@@ -244,7 +244,7 @@ function islandora_large_image_preprocess_islandora_object_print(array &$variabl
   $object = $variables['object'];
   if (in_array('islandora:sp_large_image_cmodel', $object->models)) {
     $url = Url::fromRoute('islandora.view_object', ['object' => $object->id])->toString();
-    $variables['content']['link'] = t(
+    $variables['content']['link']['#markup'] = t(
       'Persistent link: @link',
       [
         '@link' => Link::createFromRoute(
