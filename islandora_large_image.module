@@ -255,6 +255,8 @@ function islandora_large_image_preprocess_islandora_object_print(array &$variabl
       ]
     );
     $clip = isset($variables['clip']) ? $variables['clip'] : NULL;
+    $link_text = t('Print');
+    $link_href = 'javascript:window.print();';
     $variables['content']['buttons'] = [
       '#access' => isset($clip),
       '#prefix' => '<div>',
@@ -262,7 +264,10 @@ function islandora_large_image_preprocess_islandora_object_print(array &$variabl
       '#weight' => -5,
       'print' => [
         '#prefix' => '<strong>',
-        '#markup' => Link::fromTextAndUrl(t('Print'), Url::fromUri('javascript:window.print();')),
+        '#type' => 'html_tag',
+        '#tag' => 'a',
+        '#attributes' => ['href' => $link_href],
+        '#value' => $link_text,
         '#suffix' => '</strong>',
         '#weight' => -5,
       ],
@@ -274,10 +279,10 @@ function islandora_large_image_preprocess_islandora_object_print(array &$variabl
         '#prefix' => '<strong>',
         '#markup' => Link::createFromRoute(
           t('Download Image'),
-          'SEADRAGON CLIP',
+          'islandora_openseadragon.download_clip',
           ['object' => $object->id],
           ['query' => ['clip' => $clip]]
-        ),
+        )->toString(),
         '#suffix' => '</strong>',
         '#weight' => -5,
       ],
