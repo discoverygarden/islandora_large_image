@@ -1,5 +1,5 @@
 islandora_large_image.settings:
-  type: mapping
+  type: config_object
   label: Settings
   mapping:
     islandora_kakadu_url:
