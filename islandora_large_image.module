@@ -7,6 +7,9 @@
 
 use Drupal\Core\Url;
 use Drupal\Core\Link;
+use Drupal\Core\Cache\CacheableMetadata;
+
+use Drupal\user\Entity\User;
 
 use Drupal\islandora\DublinCore;
 use Drupal\islandora\Authentication\Provider\TokenAuth;
@@ -146,6 +149,14 @@ function template_preprocess_islandora_large_image(&$variables) {
   module_load_include('inc', 'islandora', 'includes/utilities');
   module_load_include('inc', 'islandora', 'includes/metadata');
 
+  $cache_meta = (new CacheableMetadata())
+    ->addCacheableDependency($islandora_object)
+    ->addCacheContexts([
+      // XXX: Because we do a number of access checks, we make things dependent
+      // on the user.
+      'user',
+    ]);
+
   // We should eventually remove the DC object and dc_array code as it only
   // exists to not break legacy implementations.
   if (isset($islandora_object['DC']) && islandora_datastream_access(ISLANDORA_VIEW_OBJECTS, $islandora_object['DC'])) {
@@ -185,9 +196,14 @@ function template_preprocess_islandora_large_image(&$variables) {
 
   if (isset($islandora_object['JP2']) && islandora_datastream_access(ISLANDORA_VIEW_OBJECTS, $islandora_object['JP2'])) {
     // Get token to allow access to XACML protected datastreams.
-    // Always use token authentication in case there is a global policy.
-    $token = TokenAuth::getObjectToken($islandora_object->id, 'JP2', 2);
-    $params['token'] = $token;
+    // If anonymous can view, pass an empty token.
+    if (islandora_datastream_access(ISLANDORA_VIEW_OBJECTS, $islandora_object['JP2'], User::getAnonymousUser())) {
+      $params['token'] = '';
+    }
+    else {
+      $cache_meta->mergeCacheMaxAge(0);
+      $params['token'] = TokenAuth::getObjectToken($islandora_object->id, 'JP2', 2);
+    }
     $params['pid'] = $islandora_object->id;
     $params['dsid'] = 'JP2';
   }
@@ -219,6 +235,8 @@ function template_preprocess_islandora_large_image(&$variables) {
   else {
     $variables['islandora_content'] = NULL;
   }
+
+  $cache_meta->applyTo($variables);
 }
 
 /**
