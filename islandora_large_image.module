@@ -117,6 +117,7 @@ function islandora_large_image_xml_form_builder_forms() {
 function islandora_large_image_xml_form_builder_form_associations() {
   return [
     'islandora_large_image_mods_form' => [
+      'self_transform' => 'islandora_cleanup_mods_extended.xsl',
       'content_model' => 'islandora:sp_large_image_cmodel',
       'form_name' => 'Large image MODS form',
       'dsid' => 'MODS',
