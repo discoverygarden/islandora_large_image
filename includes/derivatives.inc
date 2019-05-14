@@ -381,16 +381,21 @@ function islandora_large_image_imagemagick_convert($src, $dest, array $raw_argum
   \Drupal::moduleHandler()->alter('imagemagick_arguments', $arguments, $command);
   $output = '';
   $ret = -1;
-  if ($exec_manager->execute($command, $arguments, $output, $ret) !== TRUE) {
-    $variables = [
-      '@ret' => $ret,
-      '@args' => implode('<br/>', $arguments->getArguments()),
-      '@output' => $output,
-    ];
-    \Drupal::logger('islandora_large_image')->error('ImageMagick failed to convert.<br/>Error: @ret<br/>Args: @args <br/>Output @output', $variables);
-    return FALSE;
+  try {
+    $exec_manager->setTimeout(null);
+    if ($exec_manager->execute($command, $arguments, $output, $ret) !== TRUE) {
+      $variables = [
+        '@ret' => $ret,
+        '@args' => implode('<br/>', $arguments->getArguments()),
+        '@output' => $output,
+      ];
+      \Drupal::logger('islandora_large_image')->error('ImageMagick failed to convert.<br/>Error: @ret<br/>Args: @args <br/>Output @output', $variables);
+      return FALSE;
+    }
+    return $dest;
+  } finally {
+    $exec_manager->setTimeout(60);
   }
-  return $dest;
 }
 
 /**
