@@ -268,9 +268,9 @@ function islandora_large_image_create_tn_derivative(AbstractObject $object, $for
           ];
         }
       }
+      file_unmanaged_delete($derivative_file);
     }
     file_unmanaged_delete($uploaded_file);
-    file_unmanaged_delete($derivative_file);
     return $to_return;
   }
 }
