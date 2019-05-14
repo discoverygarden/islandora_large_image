@@ -382,7 +382,7 @@ function islandora_large_image_imagemagick_convert($src, $dest, array $raw_argum
   $output = '';
   $ret = -1;
   try {
-    $exec_manager->setTimeout(null);
+    $exec_manager->setTimeout(NULL);
     if ($exec_manager->execute($command, $arguments, $output, $ret) !== TRUE) {
       $variables = [
         '@ret' => $ret,
