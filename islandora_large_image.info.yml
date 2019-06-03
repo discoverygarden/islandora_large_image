@@ -1,5 +1,5 @@
 name: 'Islandora Large Image Solution Pack'
-description: 'A default Islandora module to handle large images'
+description: 'A default Islandora module to handle large images.'
 dependencies:
   - :islandora
   - imagemagick:imagemagick

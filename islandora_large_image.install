@@ -44,7 +44,7 @@ function islandora_large_image_requirements($phase) {
         'title' => $t("Islandora Solution Pack Large Image: Imagemagick Image Compression"),
         'value' => $t("Not installed"),
         'severity' => REQUIREMENT_INFO,
-        'description' => $t('Imagemagick does not appears to support JPEG2000.'),
+        'description' => $t('Imagemagick does not appear to support JPEG2000.'),
       ];
     }
     if (!($has_kakadu || $has_jp2_imagemagick)) {
